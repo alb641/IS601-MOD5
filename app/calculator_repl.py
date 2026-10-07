@@ -18,6 +18,7 @@ class Calculator:
         self.memento = CalculatorHistory()
         self.config = CalculatorConfig()
         self.config.validate()
+
         self.subject = CalculatorSubject()
         self.observer = CalculationObserver()
         self.subject.attach(self.observer)
@@ -45,6 +46,7 @@ class Calculator:
             self.current_result = result
             self.history.add(calculation)
             self.subject.notify(calculation)
+            self.save_history()
 
             return calculation
 
@@ -59,7 +61,7 @@ class Calculator:
         return self.current_result
 
     def redo(self):
-        """Redo the most recently undone state."""
+        """Redo the most recently undone calculation."""
         self.current_result = self.memento.redo(self.current_result)
         return self.current_result
 

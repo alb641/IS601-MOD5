@@ -1,6 +1,8 @@
 import pytest
+from unittest.mock import patch
 
-from app.calculator_repl import Calculator
+from app.calculator_repl import Calculator, run_repl
+from app.exceptions import CalculatorError
 
 
 def test_calculate_addition():
@@ -70,10 +72,6 @@ def test_invalid_input():
 
     with pytest.raises(Exception):
         calculator.calculate("hello", "+", 3)
-
-from unittest.mock import patch
-
-from app.calculator_repl import run_repl
 
 
 def test_repl_help_and_exit(capsys):
@@ -173,6 +171,7 @@ def test_repl_save_and_load(capsys):
     assert "History cleared." in output
     assert "History loaded." in output
 
+
 def test_repl_empty_input(capsys):
     with patch(
         "builtins.input",
@@ -183,6 +182,7 @@ def test_repl_empty_input(capsys):
     output = capsys.readouterr().out
 
     assert "Goodbye!" in output
+
 
 def test_repl_value_error_handler(capsys):
     with patch(
@@ -198,3 +198,28 @@ def test_repl_value_error_handler(capsys):
     output = capsys.readouterr().out
 
     assert "Error: Test value error" in output
+
+
+def test_repl_calculator_error_handler(capsys):
+    with patch(
+        "app.calculator_repl.Calculator.calculate",
+        side_effect=CalculatorError("Test calculator error"),
+    ):
+        with patch(
+            "builtins.input",
+            side_effect=["5 + 3", "exit"],
+        ):
+            run_repl()
+
+    output = capsys.readouterr().out
+
+    assert "Error: Test calculator error" in output
+
+
+def test_calculate_autosaves_history(tmp_path):
+    calculator = Calculator()
+    calculator.config.history_file = str(tmp_path / "history.csv")
+
+    calculator.calculate(5, "+", 3)
+
+    assert (tmp_path / "history.csv").exists()
