@@ -5,6 +5,7 @@ from app.exceptions import CalculatorError
 from app.history import CalculationHistory
 from app.input_validators import validate_number, validate_operation
 from app.operations import OperationFactory
+from app.observers import CalculationObserver, CalculatorSubject
 
 
 class Calculator:
@@ -17,6 +18,9 @@ class Calculator:
         self.memento = CalculatorHistory()
         self.config = CalculatorConfig()
         self.config.validate()
+        self.subject = CalculatorSubject()
+        self.observer = CalculationObserver()
+        self.subject.attach(self.observer)
 
     def calculate(self, operand1, operation, operand2):
         """Validate and perform a calculation."""
@@ -40,6 +44,7 @@ class Calculator:
 
             self.current_result = result
             self.history.add(calculation)
+            self.subject.notify(calculation)
 
             return calculation
 
